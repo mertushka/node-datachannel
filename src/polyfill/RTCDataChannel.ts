@@ -47,10 +47,10 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
                 this.dispatchEvent(new Event('closing'));
             }
 
-            setImmediate(() => {
+            setTimeout(() => {
                 this.#readyState = 'closed';
                 this.dispatchEvent(new Event('close'));
-            });
+            }, 0);
         });
 
         this.#dataChannel.onError((msg) => {
@@ -193,8 +193,8 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
 
     close(): void {
         this.#closeRequested = true;
-        setImmediate(() => {
+        setTimeout(() => {
             this.#dataChannel.close();
-        });
+        }, 0);
     }
 }
