@@ -59,7 +59,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/murat-dogan/node-datachannel.git"
+    "url": "git+https://github.com/mertushka/node-datachannel.git"
   },
   "keywords": [
     "libdatachannel",
