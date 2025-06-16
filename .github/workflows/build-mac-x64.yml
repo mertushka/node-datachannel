@@ -1,14 +1,21 @@
 name: Build - Mac x64
+
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
+  # push:
+  #   tags:
+  #     - v*
+
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
 jobs:
   build-macos:
     runs-on: macos-13
     strategy:
       matrix:
-        node-version: 18
+        node-version: [18]
+
     steps:
       - uses: actions/checkout@v4
       - name: Install OpenSSL
