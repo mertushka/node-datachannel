@@ -264,7 +264,7 @@ describe('polyfill', () => {
     peer1.close();
     peer2.close();
 
-    if (dc.readyState !== 'closed' && dc.readyState !== 'closing') {
+    if (dc.readyState !== 'closed') {
       await eventPromise(dc, 'close');
     }
 
