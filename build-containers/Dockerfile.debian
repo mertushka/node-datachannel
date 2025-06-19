@@ -1,12 +1,21 @@
 ARG version=bullseye
 ARG node_version=18
-
-# Accept build args
 ARG gcc_install
+ARG target_arch=amd64
 
 FROM node:${node_version}-${version}
 
+# Conditionally add target architecture for cross-compilation
+RUN if [ "$target_arch" != "amd64" ]; then \
+        case "$target_arch" in \
+            arm64) dpkg --add-architecture arm64 ;; \
+            arm) dpkg --add-architecture armhf ;; \
+        esac \
+    fi
+
 RUN apt update
+
+# Install base packages
 RUN apt install -y --no-install-recommends \
     build-essential \
     libssl-dev \
@@ -14,5 +23,16 @@ RUN apt install -y --no-install-recommends \
     cmake \
     ninja-build \
     ${gcc_install}
+
+# Install cross-compilation SSL libraries if needed
+RUN if [ "$target_arch" = "arm64" ]; then \
+        apt install -y --no-install-recommends \
+            libssl-dev:arm64 \
+            pkg-config-aarch64-linux-gnu; \
+    elif [ "$target_arch" = "arm" ]; then \
+        apt install -y --no-install-recommends \
+            libssl-dev:armhf \
+            pkg-config-arm-linux-gnueabihf; \
+    fi
 
 WORKDIR /usr/app/
