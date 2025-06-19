@@ -354,6 +354,12 @@ export default class RTCPeerConnection extends EventTarget implements globalThis
   }
 
   close(): void {
+    for (const dc of this.#dataChannels) {
+      if (dc.readyState !== 'closed' && dc.readyState !== 'closing') {
+        dc.close(); // Note: This is currently incorrect per the spec, we should set readyState to 'closed' directly without invoking the 'closing' procedure: https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection-close
+      }
+    }
+
     this.#peerConnection.close();
   }
 
