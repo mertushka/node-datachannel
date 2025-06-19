@@ -1,6 +1,6 @@
 {
   "name": "@mertushka/node-datachannel",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "description": "WebRTC For Node.js and Electron. libdatachannel node bindings.",
   "main": "./dist/cjs/lib/index.cjs",
   "module": "./dist/esm/lib/index.mjs",
@@ -37,7 +37,7 @@
     "install:nice": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_NICE=1 && cmake-js build",
     "install:gnu": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_GNUTLS=1 && cmake-js build",
     "build": "npm run compile && npm run build:tsc",
-    "compile": "cmake-js build",
+    "compile": "cmake-js clean && cmake-js configure --CDNO_MEDIA=ON --CDNO_WEBSOCKET=ON && cmake-js build",
     "build:debug": "npm run compile:debug && npm run build:tsc",
     "compile:debug": "cmake-js configure -D && cmake-js build -D",
     "build:tsc": "rimraf dist && rollup -c",
