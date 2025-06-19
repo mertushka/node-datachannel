@@ -46,20 +46,10 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
     });
 
     this.#dataChannel.onClosed(() => {
-      // Simulate closing event
       if (this.#readyState === 'closed') return;
 
-      if (this.#readyState !== 'closing') {
-        this.#readyState = 'closing';
-        this.dispatchEvent(new Event('closing'));
-      }
-
-      setImmediate(() => {
-        if (this.#readyState !== 'closed') {
-          this.#readyState = 'closed';
-          this.dispatchEvent(new Event('close'));
-        }
-      });
+      this.#readyState = 'closed';
+      this.dispatchEvent(new Event('close'));
     });
 
     this.#dataChannel.onError((msg) => {
@@ -196,7 +186,9 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
     this.dispatchEvent(new Event('closing'));
 
     setImmediate(() => {
-      this.#dataChannel.close();
+      if (this.#readyState !== 'closed') {
+        this.#dataChannel.close();
+      }
     });
   }
 }
