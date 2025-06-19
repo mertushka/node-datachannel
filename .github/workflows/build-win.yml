@@ -10,65 +10,89 @@ env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
 jobs:
-  build-windows-x64:
+  build-windows:
     runs-on: windows-2022
     strategy:
       matrix:
         node-version: [18]
+        arch: [x64, x86, arm64]
+        include:
+          - arch: x64
+            vcpkg_triplet: x64-windows-static
+            msvc_arch: amd64
+            node_arch: x64
+          - arch: x86
+            vcpkg_triplet: x86-windows-static
+            msvc_arch: amd64_x86
+            node_arch: x86
+          - arch: arm64
+            vcpkg_triplet: arm64-windows-static
+            msvc_arch: amd64_arm64
+            node_arch: arm64
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install OpenSSL
-        run: choco install openssl -y
+      
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
+      
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 'master'
+      
+      - name: Install OpenSSL via vcpkg
+        run: |
+          vcpkg install openssl:${{ matrix.vcpkg_triplet }}
+        shell: cmd
+      
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          architecture: ${{ matrix.node_arch }}
+      
+      - name: Set up build environment
+        run: |
+          echo "Setting up build environment for ${{ matrix.arch }}"
+          # Set npm config for target architecture
+          npm config set target_arch ${{ matrix.arch }}
+          npm config set target_platform win32
+          npm config set build_from_source true
+          
+          # Set vcpkg environment variables
+          echo "VCPKG_ROOT=$env:VCPKG_ROOT" >> $env:GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=${{ matrix.vcpkg_triplet }}" >> $env:GITHUB_ENV
+          
+          # Set OpenSSL paths for vcpkg
+          $vcpkgRoot = $env:VCPKG_ROOT
+          $opensslRoot = "$vcpkgRoot\installed\${{ matrix.vcpkg_triplet }}"
+          echo "OPENSSL_ROOT_DIR=$opensslRoot" >> $env:GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$opensslRoot\include" >> $env:GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=$opensslRoot\lib" >> $env:GITHUB_ENV
+        shell: pwsh
+        env:
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+      
       - name: Build
         run: npm install --build-from-source
         env:
           CI: true
-      # - name: Test
-      #   run: npm run test
-      #   env:
-      #     CI: true
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+          VCPKG_DEFAULT_TRIPLET: ${{ matrix.vcpkg_triplet }}
+      
+       - name: Test
+         run: npm run test
+         env:
+           CI: true
+      
       - name: Upload
         run: node_modules/.bin/prebuild -r napi --upload -u ${{ secrets.GITHUB_TOKEN }}
         env:
           CI: true
-
-  build-windows-x86:
-    runs-on: windows-2019
-    strategy:
-      matrix:
-        node_version: [18]
-        node_arch:
-          - x86
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x86
-      - name: Install OpenSSL
-        # openssl v3.1.1 [Approved]
-        # openssl package files install completed. Performing other installation steps.
-        # ERROR: 32-bit installation is not supported for openssl
-        run: choco install openssl --x86=true --version=1.1.1.2100
-      - name: Use Node.js ${{ matrix.node_version }}
-        uses: aminya/setup-node@x86
-        with:
-          node-version: ${{ matrix.node_version }}
-          node-arch: ${{ matrix.node_arch }}
-      - name: Build
-        run: npm install --build-from-source
-        env:
-          CI: true
-      # - name: Test
-      #   run: npm run test
-      #   env:
-      #     CI: true
-      - name: Upload
-        run: node_modules/.bin/prebuild -r napi --upload -u ${{ secrets.GITHUB_TOKEN }}
-        env:
-          CI: true
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
