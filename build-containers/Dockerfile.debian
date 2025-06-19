@@ -6,12 +6,18 @@ ARG gcc_install
 
 FROM node:${node_version}-${version}
 
+RUN dpkg --add-architecture arm64 && dpkg --add-architecture armhf && apt update
+
+
 RUN apt update
 RUN apt install -y --no-install-recommends \
     build-essential \
-    libssl-dev \
     cmake \
     ninja-build \
-    ${gcc_install}
+    pkg-config \
+    ${gcc_install} \
+    libssl-dev \
+    $(if [ "$target_arch" = "arm64" ]; then echo "libssl-dev:arm64"; fi) \
+    $(if [ "$target_arch" = "arm" ]; then echo "libssl-dev:armhf"; fi)
 
 WORKDIR /usr/app/

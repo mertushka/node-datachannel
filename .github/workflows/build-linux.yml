@@ -98,6 +98,7 @@ jobs:
           --build-arg version=${{ matrix.version }}
           --build-arg node_version=${{ matrix.node-version }}
           --build-arg gcc_install="${{ matrix.gcc_install }}"
+          --build-arg target_arch=${{ matrix.arch }}
 
       - name: Build
         run: |
