@@ -40,8 +40,6 @@ jobs:
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 'master'
 
       - name: Install OpenSSL via vcpkg
         run: |
