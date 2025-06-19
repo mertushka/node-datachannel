@@ -32,28 +32,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.msvc_arch }}
-      
+
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgGitCommitId: 'master'
-      
+
       - name: Install OpenSSL via vcpkg
         run: |
           vcpkg install openssl:${{ matrix.vcpkg_triplet }}
         shell: cmd
-      
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           architecture: ${{ matrix.node_arch }}
-      
+
       - name: Set up build environment
         run: |
           echo "Setting up build environment for ${{ matrix.arch }}"
@@ -61,11 +61,11 @@ jobs:
           npm config set target_arch ${{ matrix.arch }}
           npm config set target_platform win32
           npm config set build_from_source true
-          
+
           # Set vcpkg environment variables
           echo "VCPKG_ROOT=$env:VCPKG_ROOT" >> $env:GITHUB_ENV
           echo "VCPKG_DEFAULT_TRIPLET=${{ matrix.vcpkg_triplet }}" >> $env:GITHUB_ENV
-          
+
           # Set OpenSSL paths for vcpkg
           $vcpkgRoot = $env:VCPKG_ROOT
           $opensslRoot = "$vcpkgRoot\installed\${{ matrix.vcpkg_triplet }}"
@@ -76,7 +76,7 @@ jobs:
         env:
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
-      
+
       - name: Build
         run: npm install --build-from-source
         env:
@@ -84,12 +84,12 @@ jobs:
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
           VCPKG_DEFAULT_TRIPLET: ${{ matrix.vcpkg_triplet }}
-      
-       - name: Test
-         run: npm run test
-         env:
-           CI: true
-      
+
+      - name: Test
+        run: npm run test
+        env:
+          CI: true
+
       - name: Upload
         run: node_modules/.bin/prebuild -r napi --upload -u ${{ secrets.GITHUB_TOKEN }}
         env:
