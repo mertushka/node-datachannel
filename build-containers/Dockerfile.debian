@@ -16,12 +16,14 @@ RUN apt install -y --no-install-recommends \
     ${gcc_install}
 
 # Install custom version of CMake 
-RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz -o cmake.tar.gz && \
+RUN echo "CMAKE_VERSION is: ${CMAKE_VERSION}" && \
+    curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz -o cmake.tar.gz && \
     tar -xzf cmake.tar.gz && \
     cd cmake-${CMAKE_VERSION} && \
     ./bootstrap && \
     make -j"$(nproc)" && \
     make install && \
-    cd .. && rm -rf cmake-${CMAKE_VERSION} cmake.tar.gz
+    cd .. && \
+    rm -rf cmake-${CMAKE_VERSION} cmake.tar.gz
 
 WORKDIR /usr/app/
