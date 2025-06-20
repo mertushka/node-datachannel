@@ -1,5 +1,6 @@
 ARG version=bullseye
 ARG node_version=18
+ARG CMAKE_VERSION=3.21.0
 
 # Accept build args
 ARG gcc_install
@@ -13,5 +14,14 @@ RUN apt install -y --no-install-recommends \
     cmake \
     ninja-build \
     ${gcc_install}
+
+# Install custom version of CMake 
+RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz -o cmake.tar.gz && \
+    tar -xzf cmake.tar.gz && \
+    cd cmake-${CMAKE_VERSION} && \
+    ./bootstrap && \
+    make -j"$(nproc)" && \
+    make install && \
+    cd .. && rm -rf cmake-${CMAKE_VERSION} cmake.tar.gz
 
 WORKDIR /usr/app/
