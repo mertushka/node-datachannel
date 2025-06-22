@@ -302,19 +302,8 @@ export default class RTCPeerConnection extends EventTarget implements globalThis
       return;
     }
 
-    if (candidate.sdpMid === null && candidate.sdpMLineIndex === null) {
-      throw new TypeError('sdpMid must be set');
-    }
-
-    if (candidate.sdpMid === undefined && candidate.sdpMLineIndex == undefined) {
-      throw new TypeError('sdpMid must be set');
-    }
-
-    // Reject if sdpMid format is not valid
-    // ??
-    if (candidate.sdpMid && candidate.sdpMid.length > 3) {
-      // console.log(candidate.sdpMid);
-      throw new exceptions.OperationError('Invalid sdpMid format');
+    if (candidate.sdpMid == null && candidate.sdpMLineIndex == null) {
+      throw new TypeError('Either sdpMid or sdpMLineIndex must be set');
     }
 
     // We don't care about sdpMLineIndex, just for test
