@@ -1,5 +1,5 @@
 {
-  "name": "node-datachannel",
+  "name": "@mertushka/node-datachannel",
   "version": "0.29.0-dev",
   "description": "WebRTC For Node.js and Electron. libdatachannel node bindings.",
   "main": "./dist/cjs/lib/index.cjs",
