@@ -37,7 +37,7 @@
     "install:nice": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_NICE=1 && cmake-js build",
     "install:gnu": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_GNUTLS=1 && cmake-js build",
     "build": "npm run compile && npm run build:tsc",
-    "compile": "cmake-js build",
+    "compile": "cmake-js clean && cmake-js configure --CDNO_MEDIA=ON --CDNO_WEBSOCKET=ON && cmake-js build",
     "build:debug": "npm run compile:debug && npm run build:tsc",
     "compile:debug": "cmake-js configure -D && cmake-js build -D",
     "build:tsc": "rimraf dist && rollup -c",
@@ -49,7 +49,7 @@
     "test:wpt": "npm run run:wpt:server & (sleep 8 && (npm run run:wpt:test | tee test/wpt-tests/last-test-results.md) )",
     "wpt:server": "cd test/wpt-tests/wpt && ./wpt serve",
     "wpt:test": "ts-node test/wpt-tests/index.ts",
-    "_prebuild": "prebuild -r napi --backend cmake-js",
+    "_prebuild": "prebuild -r napi --backend cmake-js -- --CDNO_MEDIA=ON --CDNO_WEBSOCKET=ON",
     "prepack": "npm run build:tsc",
     "prettier": "prettier --write ."
   },
@@ -60,7 +60,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/murat-dogan/node-datachannel.git"
+    "url": "git+https://github.com/mertushka/node-datachannel.git"
   },
   "keywords": [
     "libdatachannel",
