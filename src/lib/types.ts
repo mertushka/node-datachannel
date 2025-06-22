@@ -13,17 +13,6 @@ export interface Channel {
   onMessage(cb: (msg: string | Buffer | ArrayBuffer) => void): void;
 }
 
-export interface WebSocketServerConfiguration {
-  port?: number; // default 8080
-  enableTls?: boolean; // default = false;
-  certificatePemFile?: string;
-  keyPemFile?: string;
-  keyPemPass?: string;
-  bindAddress?: string;
-  connectionTimeout?: number; // milliseconds
-  maxMessageSize?: number;
-}
-
 // Enum in d.ts is tricky
 export type LogLevel = 'Verbose' | 'Debug' | 'Info' | 'Warning' | 'Error' | 'Fatal';
 

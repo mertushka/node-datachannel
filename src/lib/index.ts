@@ -1,6 +1,5 @@
 import nodeDataChannel from './node-datachannel';
 import _DataChannelStream from './datachannel-stream';
-import { WebSocketServer } from './websocket-server';
 import {
   Channel,
   DataChannelInitConfig,
@@ -15,7 +14,6 @@ import {
   SctpSettings,
   SelectedCandidateInfo,
 } from './types';
-import { WebSocket } from './websocket';
 import type { CertificateFingerprint, IceUdpMuxRequest, LocalDescriptionInit } from './types';
 
 export function preload(): void {
@@ -188,9 +186,6 @@ export const RtcpReceivingSession: {
   new (): RtcpReceivingSession;
 } = nodeDataChannel.RtcpReceivingSession;
 
-export { WebSocketServer } from './websocket-server';
-export { WebSocket } from './websocket';
-
 export const DataChannelStream = _DataChannelStream;
 
 export default {
@@ -205,8 +200,6 @@ export default {
   Audio,
   DataChannel,
   PeerConnection,
-  WebSocket,
-  WebSocketServer,
   DataChannelStream,
   IceUdpMuxListener,
 };

@@ -28,11 +28,6 @@ public:
   void addRemoteCandidate(const Napi::CallbackInfo &info);
   Napi::Value createDataChannel(const Napi::CallbackInfo &info);
 
-#if RTC_ENABLE_MEDIA == 1
-  Napi::Value addTrack(const Napi::CallbackInfo &info);
-  void onTrack(const Napi::CallbackInfo &info);
-#endif
-
   Napi::Value hasMedia(const Napi::CallbackInfo &info);
   Napi::Value state(const Napi::CallbackInfo &info);
   Napi::Value iceState(const Napi::CallbackInfo &info);

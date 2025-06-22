@@ -1,12 +1,6 @@
 #include "peer-connection-wrapper.h"
 #include "data-channel-wrapper.h"
 
-#if RTC_ENABLE_MEDIA == 1
-#include "media-track-wrapper.h"
-#include "media-video-wrapper.h"
-#include "media-audio-wrapper.h"
-#endif
-
 #include "plog/Log.h"
 
 #include <cctype>
@@ -47,11 +41,6 @@ Napi::Object PeerConnectionWrapper::Init(Napi::Env env, Napi::Object exports)
             InstanceMethod("remoteFingerprint", &PeerConnectionWrapper::remoteFingerprint),
             InstanceMethod("addRemoteCandidate", &PeerConnectionWrapper::addRemoteCandidate),
             InstanceMethod("createDataChannel", &PeerConnectionWrapper::createDataChannel),
-
-#if RTC_ENABLE_MEDIA == 1
-            InstanceMethod("addTrack", &PeerConnectionWrapper::addTrack),
-            InstanceMethod("onTrack", &PeerConnectionWrapper::onTrack),
-#endif
             InstanceMethod("hasMedia", &PeerConnectionWrapper::hasMedia),
             InstanceMethod("state", &PeerConnectionWrapper::state),
             InstanceMethod("iceState", &PeerConnectionWrapper::iceState),
@@ -1120,92 +1109,6 @@ std::string PeerConnectionWrapper::candidateTransportTypeToString(const rtc::Can
         return "unknown";
     }
 }
-
-#if RTC_ENABLE_MEDIA == 1
-Napi::Value PeerConnectionWrapper::addTrack(const Napi::CallbackInfo &info)
-{
-    PLOG_DEBUG << "addTrack() called";
-    Napi::Env env = info.Env();
-    int length = info.Length();
-
-    if (!mRtcPeerConnPtr)
-    {
-        Napi::Error::New(env, "addTrack() called on destroyed peer connection").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
-    if (length < 1 || !info[0].IsObject())
-    {
-        Napi::TypeError::New(env, "Media class instance expected").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
-    try
-    {
-        Napi::Object obj = info[0].As<Napi::Object>();
-        if (obj.Get("media-type-video").IsBoolean())
-        {
-            VideoWrapper *videoPtr = Napi::ObjectWrap<VideoWrapper>::Unwrap(obj);
-            std::shared_ptr<rtc::Track> track = mRtcPeerConnPtr->addTrack(videoPtr->getVideoInstance());
-            auto instance = TrackWrapper::constructor.New({Napi::External<std::shared_ptr<rtc::Track>>::New(info.Env(), &track)});
-            return instance;
-        }
-
-        if (obj.Get("media-type-audio").IsBoolean())
-        {
-            AudioWrapper *audioPtr = Napi::ObjectWrap<AudioWrapper>::Unwrap(obj);
-            std::shared_ptr<rtc::Track> track = mRtcPeerConnPtr->addTrack(audioPtr->getAudioInstance());
-            auto instance = TrackWrapper::constructor.New({Napi::External<std::shared_ptr<rtc::Track>>::New(info.Env(), &track)});
-            return instance;
-        }
-
-        Napi::Error::New(env, std::string("Unknown media type")).ThrowAsJavaScriptException();
-        return env.Null();
-    }
-    catch (std::exception &ex)
-    {
-        Napi::Error::New(env, std::string("libdatachannel error: ") + ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
-}
-
-void PeerConnectionWrapper::onTrack(const Napi::CallbackInfo &info)
-{
-    PLOG_DEBUG << "onTrack() called";
-    Napi::Env env = info.Env();
-    int length = info.Length();
-
-    if (!mRtcPeerConnPtr)
-    {
-        Napi::Error::New(env, "onGatheringStateChange() called on destroyed peer connection").ThrowAsJavaScriptException();
-        return;
-    }
-
-    if (length < 1 || !info[0].IsFunction())
-    {
-        Napi::TypeError::New(env, "Function expected").ThrowAsJavaScriptException();
-        return;
-    }
-
-    // Callback
-    mOnTrackCallback = std::make_unique<ThreadSafeCallback>(info[0].As<Napi::Function>());
-
-    mRtcPeerConnPtr->onTrack([&](std::shared_ptr<rtc::Track> track)
-                             {
-        if (mOnTrackCallback)
-            mOnTrackCallback->call([this, track](Napi::Env env, std::vector<napi_value> &args) {
-                // Check the peer connection is not closed
-                if(instances.find(this) == instances.end())
-                    throw ThreadSafeCallback::CancelException();
-
-                // This will run in main thread and needs to construct the
-                // arguments for the call
-                std::shared_ptr<rtc::Track> newTrack = track;
-                auto instance = TrackWrapper::constructor.New({Napi::External<std::shared_ptr<rtc::Track>>::New(env, &newTrack)});
-                args = {instance};
-            }); });
-}
-#endif
 
 Napi::Value PeerConnectionWrapper::hasMedia(const Napi::CallbackInfo &info)
 {
