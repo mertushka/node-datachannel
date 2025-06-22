@@ -35,9 +35,6 @@ FetchContent_Declare(
     GIT_TAG "v0.23.0"
 )
 
-option(NO_MEDIA "Disable media transport support in libdatachannel" OFF)
-option(NO_WEBSOCKET "Disable WebSocket support in libdatachannel" OFF)
-
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_GetProperties(libdatachannel)
 
@@ -56,23 +53,6 @@ set(SRC_FILES
     src/cpp/main.cpp
     ${CMAKE_JS_SRC}
 )
-
-if(NOT NO_MEDIA)
-    list(APPEND SRC_FILES
-        src/cpp/media-direction.cpp
-        src/cpp/media-rtcpreceivingsession-wrapper.cpp
-        src/cpp/media-track-wrapper.cpp
-        src/cpp/media-audio-wrapper.cpp
-        src/cpp/media-video-wrapper.cpp
-    )
-endif()
-
-if(NOT NO_WEBSOCKET)
-    list(APPEND SRC_FILES
-        src/cpp/web-socket-wrapper.cpp
-        src/cpp/web-socket-server-wrapper.cpp
-    )
-endif()
 
 add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
 
