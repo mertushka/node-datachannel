@@ -164,9 +164,14 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
 
   send(data: string | Blob | ArrayBuffer | ArrayBufferView): void {
     if (this.#readyState !== 'open') {
-      throw new exceptions.InvalidStateError(
-        "Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel.readyState is not 'open'",
-      );
+      if (process.env.DATACHANNEL_SEND_DEBUG === 'true') {
+        console.error(
+          new exceptions.InvalidStateError(
+            "Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel.readyState is not 'open'",
+          ),
+        );
+      }
+      return;
     }
 
     // Needs network error, type error implemented
@@ -193,12 +198,23 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
     } catch (error) {
       //If error contains "DataChannel is closed" throw InvalidStateError
       if (error instanceof Error && error?.message?.includes('DataChannel is closed')) {
-        throw new exceptions.InvalidStateError(
-          "Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel is not 'open'",
-        );
+        // @ts-expect-error i-hate-ts
+        if (this.#readyState !== 'closed') {
+          this.#readyState = 'closed';
+          this.dispatchEvent(new Event('close'));
+        }
+        if (process.env.DATACHANNEL_SEND_DEBUG === 'true') {
+          console.error(
+            new exceptions.InvalidStateError(
+              "Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel is not 'open'",
+            ),
+          );
+        }
       } else {
         // Otherwise re-throw the error
-        throw error;
+        if (process.env.DATACHANNEL_SEND_DEBUG === 'true') {
+          console.error(error);
+        }
       }
     }
   }
