@@ -306,6 +306,10 @@ export default class RTCPeerConnection extends EventTarget implements globalThis
       throw new TypeError('Either sdpMid or sdpMLineIndex must be set');
     }
 
+    if (candidate.sdpMid && ['audio', 'video'].includes(candidate.sdpMid.toLowerCase())) {
+      throw new exceptions.OperationError(`sdpMid '${candidate.sdpMid}' is not supported`);
+    }
+
     // We don't care about sdpMLineIndex, just for test
     if (!candidate.sdpMid && candidate.sdpMLineIndex > 1) {
       throw new exceptions.OperationError('This is only for test case.');
