@@ -162,11 +162,6 @@ Napi::Value DataChannelWrapper::getProtocol(const Napi::CallbackInfo &info)
 Napi::Value DataChannelWrapper::sendMessage(const Napi::CallbackInfo &info)
 {
     PLOG_DEBUG << "sendMessage() called";
-    if (!mDataChannelPtr)
-    {
-        Napi::Error::New(info.Env(), "sendMessage() called on destroyed channel").ThrowAsJavaScriptException();
-        return info.Env().Null();
-    }
 
     Napi::Env env = info.Env();
     int length = info.Length();
@@ -175,6 +170,29 @@ Napi::Value DataChannelWrapper::sendMessage(const Napi::CallbackInfo &info)
     if (length < 1 || (!info[0].IsString() && !info[0].IsNull()))
     {
         Napi::TypeError::New(env, "String or Null expected").ThrowAsJavaScriptException();
+        return info.Env().Null();
+    }
+
+    if (!mDataChannelPtr)
+    {
+        Napi::Error::New(info.Env(), "sendMessage() called on destroyed channel").ThrowAsJavaScriptException();
+        return info.Env().Null();
+    }
+
+    // Check if the channel is open before attempting to send
+    try
+    {
+        if (!mDataChannelPtr->isOpen())
+        {
+            PLOG_DEBUG << "sendMessageBinary() called on closed channel";
+            Napi::Error::New(info.Env(), "DataChannel is closed").ThrowAsJavaScriptException();
+            return info.Env().Null();
+        }
+    }
+    catch (std::exception &ex)
+    {
+        PLOG_DEBUG << "Error checking channel state: " << ex.what();
+        Napi::Error::New(info.Env(), "DataChannel is closed").ThrowAsJavaScriptException();
         return info.Env().Null();
     }
 
@@ -192,11 +210,6 @@ Napi::Value DataChannelWrapper::sendMessage(const Napi::CallbackInfo &info)
 Napi::Value DataChannelWrapper::sendMessageBinary(const Napi::CallbackInfo &info)
 {
     PLOG_DEBUG << "sendMessageBinary() called";
-    if (!mDataChannelPtr)
-    {
-        Napi::Error::New(info.Env(), "sendMessagBinary() called on destroyed channel").ThrowAsJavaScriptException();
-        return info.Env().Null();
-    }
 
     Napi::Env env = info.Env();
     int length = info.Length();
@@ -205,6 +218,28 @@ Napi::Value DataChannelWrapper::sendMessageBinary(const Napi::CallbackInfo &info
     {
         Napi::TypeError::New(env, "Buffer expected").ThrowAsJavaScriptException();
         return info.Env().Null();
+    }
+
+    
+    if (!mDataChannelPtr)
+    {
+        Napi::Error::New(info.Env(), "sendMessageBinary() called on destroyed channel").ThrowAsJavaScriptException();
+        return info.Env().Null();
+    }
+
+    // Check if the channel is open before attempting to send
+    try
+    {
+        if (!mDataChannelPtr->isOpen())
+        {
+            PLOG_DEBUG << "sendMessageBinary() called on closed channel";
+            return Napi::Boolean::New(info.Env(), false);
+        }
+    }
+    catch (std::exception &ex)
+    {
+        PLOG_DEBUG << "Error checking channel state: " << ex.what();
+        return Napi::Boolean::New(info.Env(), false);
     }
 
     try
