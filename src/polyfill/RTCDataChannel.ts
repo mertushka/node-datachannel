@@ -51,17 +51,21 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
       if (this.#readyState === 'closed') return;
 
       if (!this.#closeRequested) {
-        // if close was not requested, we emit 'closing' before 'close' to match the spec behavior
+        // if close was not requested (network failure etc.), we emit 'closing' before 'close' to match the spec behavior
         this.#readyState = 'closing';
         this.dispatchEvent(new Event('closing'));
-      }
 
-      setImmediate(() => {
-        if (this.#readyState !== 'closed') {
-          this.#readyState = 'closed';
-          this.dispatchEvent(new Event('close'));
-        }
-      });
+        setImmediate(() => {
+          if (this.#readyState !== 'closed') {
+            this.#readyState = 'closed';
+            this.dispatchEvent(new Event('close'));
+          }
+        });
+      } else {
+        // if close was requested, we emit 'close' immediately
+        this.#readyState = 'closed';
+        this.dispatchEvent(new Event('close'));
+      }
     });
 
     this.#dataChannel.onError((msg) => {
@@ -233,5 +237,6 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
   _forceCloseAbruptly(): void {
     if (this.#readyState === 'closing' || this.#readyState === 'closed') return;
     this.#readyState = 'closed';
+    this.dispatchEvent(new Event('close'));
   }
 }
