@@ -52,12 +52,15 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
       if (!this.#closeRequested) {
         this.#readyState = 'closing';
         this.dispatchEvent(new Event('closing'));
-      }
 
-      setImmediate(() => {
+        setImmediate(() => {
         this.#readyState = 'closed';
         this.dispatchEvent(new Event('close'));
       });
+      } else {
+        this.#readyState = 'closed';
+        this.dispatchEvent(new Event('close'));
+      }
     });
 
     this.#dataChannel.onError((msg) => {
@@ -188,7 +191,7 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
   }
 
   send(data): void {
-    if (this.#readyState !== 'open') {
+    if (this.#readyState !== 'open' || this.#closeRequested === true) {
       throw new exceptions.InvalidStateError(
         "Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel.readyState is not 'open'",
       );
@@ -199,27 +202,17 @@ export default class RTCDataChannel extends EventTarget implements globalThis.RT
       this.#dataChannel.sendMessage(data);
     } else if (data instanceof Blob) {
       data.arrayBuffer().then((ab) => {
-        if (process?.versions?.bun) {
-          this.#dataChannel.sendMessageBinary(Buffer.from(ab));
-        } else {
           this.#dataChannel.sendMessageBinary(new Uint8Array(ab));
-        }
       });
     } else if (data instanceof Uint8Array) {
       this.#dataChannel.sendMessageBinary(data);
     } else {
-      if (process?.versions?.bun) {
-        this.#dataChannel.sendMessageBinary(Buffer.from(data));
-      } else {
         this.#dataChannel.sendMessageBinary(new Uint8Array(data));
-      }
     }
   }
 
   close(): void {
     this.#closeRequested = true;
-    setImmediate(() => {
-      this.#dataChannel.close();
-    });
+    this.#dataChannel.close();
   }
 }
