@@ -23,5 +23,3 @@ jobs:
         run: |
           npm install --ignore-scripts
           npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
